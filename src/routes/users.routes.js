@@ -5,6 +5,7 @@ const usersCtrl = require ('../controllers/users.controller.js')
 
 router.post('/create', usersCtrl.create)
 router.get('/findAll', usersCtrl.findAll)
-router.get('/find', usersCtrl.find)
+router.post('/find', usersCtrl.find)
+router.delete('/delete', usersCtrl.delete)
 
 module.exports = router;
