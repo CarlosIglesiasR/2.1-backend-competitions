@@ -41,11 +41,22 @@ controller.find = async (req, response) => {
             _id: 0,
             userName: 1
         })
-        response.json({
-            message: 'usuario encontrado con éxito',
-            result: users,
-            find: true
-        });
+
+        if(users) {
+            response.json({
+                message: 'usuario encontrado con éxito',
+                result: users,
+                find: true
+            });
+        } else{
+            response.json({
+                message: 'no hay usuarios que coincidan',
+                result: users,
+                find: false
+            });
+        }
+
+        
     } catch (error) {
         response.send({
             message: 'Error al buscar el usuarios',
