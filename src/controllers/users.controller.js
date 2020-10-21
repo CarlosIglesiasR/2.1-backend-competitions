@@ -4,36 +4,55 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 
-
-
-
 controller.create = async (req, response) => {
 
     try {
         //Encriptamos con hash la contraseña que nos llega desde el front
         bcrypt.genSalt(saltRounds, async function (err, salt) {
             bcrypt.hash(req.body.password, salt, async function (err, hash) {
-                console.log(hash)
                 req.body.password = hash
                 //Una vez encriptada y reasignada guardamos el usuario con esa contraseña
                 const newUser = new user(req.body)
-                await newUser.save();
-                response.send({
-                    message: 'Usuario creado con éxito',
-                    created: true
-                })
+                try {
+                    await newUser.save();
+                    response.send({
+                        message: 'Usuario creado con éxito',
+                        created: true
+                    })
+                } catch (error) {
+                   if(error.code == 11000) {
+                    response.send({
+                        message: 'Error al crear el usuario, clave única duplicada',
+                        error:  {
+                            descripción: "Clave duplicada",
+                            clave: error.keyValue
+                            
+                        },
+                        created: false
+                    })
+                   }else{
+                    response.send({
+                        message: 'Error al crear el usuario',
+                        error: error,
+                        created: false
+                    })
+                   }
+                    
+                }
+                
+                
             });
         });
 
-
     } catch (error) {
-        console.log(error);
         response.send({
             message: 'Error al crear el usuario',
+            error: error,
             created: false
         })
     }
 }
+
 controller.findAll = async (req, response) => {
     try {
         const users = await user.find()
@@ -45,6 +64,7 @@ controller.findAll = async (req, response) => {
     } catch (error) {
         response.send({
             message: 'Error al buscar usuarios',
+            error: error,
             findAll: false
         })
     }
@@ -52,7 +72,6 @@ controller.findAll = async (req, response) => {
 controller.find = async (req, response) => {
 
     try {
-
         const users = await user.findOne({
             userName: req.body.userName
         }, {
@@ -60,9 +79,8 @@ controller.find = async (req, response) => {
             userName: 1,
             password: 1
         })
-
         if (users) {
-            console.log(users)
+
             bcrypt.compare(req.body.password, users.password, function (err, result) {
 
                 if (result) {
@@ -93,6 +111,7 @@ controller.find = async (req, response) => {
     } catch (error) {
         response.send({
             message: 'Error al buscar el usuario',
+            error: error,
             findAll: false
         })
     }
@@ -101,8 +120,6 @@ controller.find = async (req, response) => {
 }
 
 controller.delete = async (req, response) => {
-    //findById(req.params.id)
-    console.log(req.body.id)
     try {
         const deletedUser = await user.findOneAndDelete({
             _id: req.body.id
@@ -113,9 +130,9 @@ controller.delete = async (req, response) => {
             delete: true
         })
     } catch (error) {
-        console.log(error)
         response.send({
             message: 'Error borrar el usuarios',
+            error: error,
             delete: false
         })
     }
