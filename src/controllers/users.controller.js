@@ -72,13 +72,27 @@ controller.findAll = async (req, response) => {
 controller.find = async (req, response) => {
 
     try {
+        // const users = await user.findOne({
+        //     userName: req.body.userName
+        // }, {
+        //     _id: 0,
+        //     userName: 1,
+        //     password: 1
+        // })
+
         const users = await user.findOne({
-            userName: req.body.userName
+            $or: [{
+                userName: req.body.userName
+            }, {
+                email: req.body.userName
+            }]
         }, {
             _id: 0,
             userName: 1,
             password: 1
         })
+
+
         if (users) {
 
             bcrypt.compare(req.body.password, users.password, function (err, result) {
