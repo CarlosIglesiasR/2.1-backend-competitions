@@ -3,9 +3,8 @@ const user = require('../models/user')
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
-
+//Controlador para crear un usuario
 controller.create = async (req, response) => {
-
     try {
         //Encriptamos con hash la contraseña que nos llega desde el front
         bcrypt.genSalt(saltRounds, async function (err, salt) {
@@ -39,8 +38,7 @@ controller.create = async (req, response) => {
                    }
                     
                 }
-                
-                
+                     
             });
         });
 
@@ -52,7 +50,7 @@ controller.create = async (req, response) => {
         })
     }
 }
-
+//Controlador para devolver todos los usuarios.
 controller.findAll = async (req, response) => {
     try {
         const users = await user.find()
@@ -69,17 +67,10 @@ controller.findAll = async (req, response) => {
         })
     }
 }
+//Controlador para devolver un usuario si el email o usuario y el password son los correctos
 controller.find = async (req, response) => {
 
     try {
-        // const users = await user.findOne({
-        //     userName: req.body.userName
-        // }, {
-        //     _id: 0,
-        //     userName: 1,
-        //     password: 1
-        // })
-
         const users = await user.findOne({
             $or: [{
                 userName: req.body.userName
@@ -91,7 +82,6 @@ controller.find = async (req, response) => {
             userName: 1,
             password: 1
         })
-
 
         if (users) {
 
@@ -133,6 +123,7 @@ controller.find = async (req, response) => {
 
 }
 
+//Controlador para borrar un usuario a traves de su ID
 controller.delete = async (req, response) => {
     try {
         const deletedUser = await user.findOneAndDelete({
@@ -152,5 +143,81 @@ controller.delete = async (req, response) => {
     }
 
 }
+
+//Controlador para actualizar un usuario (logeado y para actualizar la contraseña)
+controller.update = async (req, response) => {
+
+    if(req.body.newPasswordConfirm == req.body.newPassword){
+        try {
+            const users = await user.findOne({
+                $or: [{
+                    userName: req.body.userName
+                }, {
+                    email: req.body.userName
+                }]
+            }, {
+                _id: 0,
+                userName: 1,
+                password: 1
+            })
+    
+            if (users) {
+    
+                bcrypt.compare(req.body.password, users.password, function (err, result) {
+    
+                    if (result) {
+    
+                        bcrypt.genSalt(saltRounds, async function (err, salt) {
+                            bcrypt.hash(req.body.newPassword, salt, async function (err, hash) {
+                                req.body.newPassword = hash
+                                users.password = req.body.newPassword
+                                const updateEmployee = await user.findOneAndUpdate({userName : req.body.userName}, users);
+                                response.json({
+                                    message: 'Usuario actrualizado con éxito',
+                                    result: updateEmployee.userName,
+                                    update: true
+                                });
+                            });
+                        });
+    
+                        
+    
+                    } else {
+                        response.json({
+                            message: 'Contraseña incorrecta',
+                            update: false
+                        });
+    
+                    }
+    
+                });
+    
+            } else {
+                response.json({
+                    message: 'No hay usuarios que coincidan',
+                    update: false
+                });
+            }
+    
+        } catch (error) {
+            response.send({
+                message: 'Error al buscar el usuario',
+                error: error,
+                update: false
+            })
+        }
+    } else{
+        response.send({
+            message: 'Error los passwords no coinciden',
+            update: false
+        })
+
+    }
+
+
+
+
+}
+
 
 module.exports = controller;
