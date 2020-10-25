@@ -2,9 +2,10 @@ const controller = {}
 const user = require('../models/user')
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const jwt = require ('jsonwebtoken');
 
 //Controlador para crear un usuario
-controller.create = async (req, response) => {
+controller.createUser = async (req, response) => {
     try {
         //Encriptamos con hash la contraseña que nos llega desde el front
         bcrypt.genSalt(saltRounds, async function (err, salt) {
@@ -51,7 +52,7 @@ controller.create = async (req, response) => {
     }
 }
 //Controlador para devolver todos los usuarios.
-controller.findAll = async (req, response) => {
+controller.findAllUsers = async (req, response) => {
     try {
         const users = await user.find()
         response.json({
@@ -68,7 +69,7 @@ controller.findAll = async (req, response) => {
     }
 }
 //Controlador para devolver un usuario si el email o usuario y el password son los correctos
-controller.find = async (req, response) => {
+controller.login = async (req, response) => {
 
     try {
         const users = await user.findOne({
@@ -84,14 +85,15 @@ controller.find = async (req, response) => {
         })
 
         if (users) {
-
+            
             bcrypt.compare(req.body.password, users.password, function (err, result) {
 
                 if (result) {
-
+                    const token = jwt.sign({users}, "my_secret_key_116659KEY")
                     response.json({
                         message: 'Usuario encontrado con éxito',
                         result: users.userName,
+                        token: token,
                         find: true
                     });
 
@@ -124,7 +126,7 @@ controller.find = async (req, response) => {
 }
 
 //Controlador para borrar un usuario a traves de su ID
-controller.delete = async (req, response) => {
+controller.deleteUser = async (req, response) => {
     try {
         const deletedUser = await user.findOneAndDelete({
             _id: req.body.id
@@ -145,7 +147,7 @@ controller.delete = async (req, response) => {
 }
 
 //Controlador para actualizar un usuario (logeado y para actualizar la contraseña)
-controller.update = async (req, response) => {
+controller.updateUser = async (req, response) => {
 
     if(req.body.newPasswordConfirm == req.body.newPassword){
         try {
@@ -214,10 +216,8 @@ controller.update = async (req, response) => {
 
     }
 
-
-
-
 }
+
 
 
 module.exports = controller;
