@@ -1,4 +1,5 @@
 const jwt = require ('jsonwebtoken');
+
 exports.ensureToken = (req, res, next) =>{
     try {
         const bearerHeader = req.headers.authorization;

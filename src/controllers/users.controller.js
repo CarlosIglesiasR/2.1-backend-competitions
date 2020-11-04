@@ -89,7 +89,15 @@ controller.login = async (req, response) => {
             bcrypt.compare(req.body.password, users.password, function (err, result) {
 
                 if (result) {
-                    const token = jwt.sign({users}, "my_secret_key_116659KEY")
+                    const token = jwt.sign({
+                        exp: Math.floor(Date.now() / 1000) + (60 * 60),
+                        data: {users}
+                      }, 'my_secret_key_116659KEY');
+                        
+                        //**Con estas dos líneas podemos consultar el contenido del token**/
+                        //var decoded = jwt.decode(token, {complete: true});
+                        //console.log(decoded.payload)
+
                     response.json({
                         message: 'Usuario encontrado con éxito',
                         result: users.userName,
